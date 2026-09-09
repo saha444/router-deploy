@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=JetBrains+Mono:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base resets ─────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'EB Garamond', serif;
+    background-color: #0a0a14;
+    color: #e2e8f0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(150, 150, 150, 0.25); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(150, 150, 150, 0.45); }
+}
+
+/* ── Sleek scrollbar utility ─────────────────────────────────── */
+.sleek-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 150, 150, 0.25) transparent;
+}
+.sleek-scrollbar::-webkit-scrollbar {
+  height: 3px;
+  width: 3px;
+}
+.sleek-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sleek-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.25);
+  border-radius: 9999px;
+}
+.sleek-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.45);
+}
+
+/* ── Component layer ─────────────────────────────────────────── */
+@layer components {
+
+  /* Glass card */
+  .card {
+    @apply bg-surface-700/60 backdrop-blur-md border border-surface-400/30 rounded-2xl;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .card-hover {
+    @apply card transition-all duration-300;
+  }
+  .card-hover:hover {
+    @apply border-primary-500/50;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(99,102,241,0.15);
+    transform: translateY(-2px);
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm
+           transition-all duration-200 cursor-pointer select-none;
+  }
+  .btn-primary {
+    @apply btn bg-primary-600 hover:bg-primary-500 text-white;
+    box-shadow: 0 0 20px rgba(99,102,241,0.35);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 0 30px rgba(99,102,241,0.5);
+    transform: translateY(-1px);
+  }
+  .btn-secondary {
+    @apply btn bg-surface-600 hover:bg-surface-500 text-slate-200 border border-surface-400/40;
+  }
+  .btn-danger {
+    @apply btn bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30;
+  }
+  .btn-success {
+    @apply btn bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs rounded-lg;
+  }
+  .btn:disabled {
+    @apply opacity-40 cursor-not-allowed pointer-events-none;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .badge-primary  { @apply badge bg-primary-500/20 text-primary-300 border border-primary-500/30; }
+  .badge-success  { @apply badge bg-emerald-500/20 text-emerald-300 border border-emerald-500/30; }
+  .badge-warning  { @apply badge bg-amber-500/20 text-amber-300 border border-amber-500/30; }
+  .badge-danger   { @apply badge bg-rose-500/20 text-rose-300 border border-rose-500/30; }
+  .badge-cyan     { @apply badge bg-cyan-500/20 text-cyan-300 border border-cyan-500/30; }
+
+  /* Inputs */
+  .input {
+    @apply w-full bg-surface-600/60 border border-surface-400/40 rounded-xl px-3 py-2
+           text-sm text-slate-100 placeholder-slate-500
+           focus:outline-none focus:border-primary-500/60 focus:ring-1 focus:ring-primary-500/30
+           transition-all duration-200;
+  }
+
+  .label { @apply block text-xs font-medium text-slate-400 mb-1.5; }
+
+  /* Section title */
+  .section-title {
+    @apply text-lg font-semibold text-slate-100 flex items-center gap-2;
+  }
+
+  /* Stat block */
+  .stat-card {
+    @apply card p-4 flex flex-col gap-1;
+  }
+  .stat-value {
+    @apply text-2xl font-bold text-slate-100 font-mono;
+  }
+  .stat-label {
+    @apply text-xs text-slate-500 uppercase tracking-wider;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    @apply h-1.5 rounded-full bg-surface-500 overflow-hidden;
+  }
+  .progress-fill {
+    @apply h-full rounded-full transition-all duration-700;
+  }
+
+  /* Divider */
+  .divider { @apply border-t border-surface-400/30 my-4; }
+
+  /* Glow text */
+  .glow-text {
+    text-shadow: 0 0 20px rgba(99,102,241,0.8);
+  }
+
+  /* Algorithm colour chips */
+  .chip-qpso   { @apply badge bg-violet-500/20 text-violet-300 border border-violet-500/30; }
+  .chip-pso    { @apply badge bg-cyan-500/20 text-cyan-300 border border-cyan-500/30; }
+  .chip-nsga2  { @apply badge bg-amber-500/20 text-amber-300 border border-amber-500/30; }
+}
+
+/* ── Leaflet overrides ───────────────────────────────────────── */
+.leaflet-container {
+  background: #0a0a14 !important;
+  font-family: 'EB Garamond', serif;
+}
+
+.leaflet-control-zoom a {
+  background: #161628 !important;
+  color: #a5b4fc !important;
+  border-color: #3a3a60 !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: #1c1c32 !important;
+  color: #818cf8 !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: rgba(22, 22, 40, 0.95) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(99, 102, 241, 0.2) !important;
+  border-radius: 12px !important;
+  color: #e2e8f0 !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(22, 22, 40, 0.95) !important;
+}
+
+.leaflet-attribution-flag { display: none !important; }
+
+/* ── Utility animations ──────────────────────────────────────── */
+.animate-fade-in  { animation: fadeIn 0.4s ease-out both; }
+.animate-slide-in { animation: slideIn 0.3s ease-out both; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { transform: translateX(-20px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+/* Spinning loader */
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid rgba(99,102,241,0.15);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
