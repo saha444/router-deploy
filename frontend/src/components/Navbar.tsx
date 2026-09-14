@@ -8,7 +8,6 @@ const Navbar: React.FC = () => {
 
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
-  const [showAuth, setShowAuth] = useState(false);
 
   return (
     <>
@@ -53,7 +52,7 @@ const Navbar: React.FC = () => {
             <button
               onClick={() => setShowToolsMenu(!showToolsMenu)}
               className={`transition-opacity hover:opacity-100 flex items-center gap-1 ${
-                pathname.startsWith('/routing') || pathname.startsWith('/demo') || pathname.startsWith('/research')
+                pathname.startsWith('/demo')
                   ? isDark
                     ? 'text-white font-medium'
                     : 'text-black font-medium'
@@ -76,15 +75,6 @@ const Navbar: React.FC = () => {
                 onMouseLeave={() => setShowToolsMenu(false)}
               >
                 <Link
-                  to="/routing"
-                  onClick={() => setShowToolsMenu(false)}
-                  className={`block px-4 py-2 text-base transition-colors ${
-                    isDark ? 'hover:bg-neutral-900' : 'hover:bg-neutral-100'
-                  }`}
-                >
-                  live routing
-                </Link>
-                <Link
                   to="/demo"
                   onClick={() => setShowToolsMenu(false)}
                   className={`block px-4 py-2 text-base transition-colors ${
@@ -92,15 +82,6 @@ const Navbar: React.FC = () => {
                   }`}
                 >
                   route simulation
-                </Link>
-                <Link
-                  to="/research"
-                  onClick={() => setShowToolsMenu(false)}
-                  className={`block px-4 py-2 text-base transition-colors ${
-                    isDark ? 'hover:bg-neutral-900' : 'hover:bg-neutral-100'
-                  }`}
-                >
-                  research lab
                 </Link>
               </div>
             )}
@@ -113,17 +94,6 @@ const Navbar: React.FC = () => {
             }`}
           >
             about
-          </button>
-
-          <button
-            onClick={() => setShowAuth(true)}
-            className={`px-4 py-1 rounded-full border text-base transition-all duration-300 ${
-              isDark
-                ? 'border-neutral-700 text-white hover:bg-white hover:text-black'
-                : 'border-neutral-300 text-black hover:bg-black hover:text-white'
-            }`}
-          >
-            sign up / login
           </button>
 
           {/* Constant Navbar Theme Toggle (Icon Only) */}
@@ -188,18 +158,11 @@ const Navbar: React.FC = () => {
               &times;
             </button>
             <h2 className="text-3xl font-semibold mb-2">About Router</h2>
-            <p className="text-base leading-relaxed opacity-80 mb-4">
+            <p className="text-base leading-relaxed opacity-80 mb-6">
               ROUTER is an event-triggered many-objective quantum-inspired vehicle routing optimization platform.
               It dynamically reconfigures multi-vehicle urban delivery corridors across travel time, road distance,
               congestion exposure, and route disruption.
             </p>
-            <div className={`p-4 rounded-xl border mb-6 text-sm ${isDark ? 'bg-neutral-900/60 border-neutral-800' : 'bg-neutral-100 border-neutral-200'}`}>
-              <div className="font-semibold mb-1">Core Mathematical Formulation</div>
-              <div>min F(x) = &#123; T(x), D(x), C(x), R(x) &#125;</div>
-              <div className="text-xs opacity-70 mt-1">
-                Optimized via ET-MaO-QPSO over OpenStreetMap live topological graphs.
-              </div>
-            </div>
             <button
               onClick={() => setShowAbout(false)}
               className={`w-full py-2.5 rounded-full border text-base font-medium transition-all ${
@@ -208,73 +171,6 @@ const Navbar: React.FC = () => {
             >
               Close
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Auth / Login Modal */}
-      {showAuth && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in font-garamond">
-          <div
-            className={`max-w-md w-full p-8 rounded-2xl border shadow-2xl relative ${
-              isDark ? 'bg-[#0a0a0a] border-neutral-800 text-white' : 'bg-white border-neutral-300 text-black'
-            }`}
-            style={{ fontFamily: '"EB Garamond", serif' }}
-          >
-            <button
-              onClick={() => setShowAuth(false)}
-              className="absolute top-4 right-5 text-2xl font-light hover:opacity-60"
-            >
-              &times;
-            </button>
-            <h2 className="text-3xl font-semibold mb-1">Sign In</h2>
-            <p className="text-sm opacity-70 mb-6">Access your fleet operations and saved routing scenarios.</p>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setShowAuth(false);
-              }}
-              className="space-y-4"
-            >
-              <div>
-                <label className="block text-sm mb-1 opacity-80">Email address</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="operator@fleet.org"
-                  className={`w-full px-4 py-2.5 rounded-xl border text-base outline-none transition-colors ${
-                    isDark
-                      ? 'bg-neutral-900 border-neutral-800 text-white focus:border-white'
-                      : 'bg-neutral-50 border-neutral-300 text-black focus:border-black'
-                  }`}
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-1 opacity-80">Password</label>
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  className={`w-full px-4 py-2.5 rounded-xl border text-base outline-none transition-colors ${
-                    isDark
-                      ? 'bg-neutral-900 border-neutral-800 text-white focus:border-white'
-                      : 'bg-neutral-50 border-neutral-300 text-black focus:border-black'
-                  }`}
-                />
-              </div>
-
-              <button
-                type="submit"
-                className={`w-full py-3 rounded-full text-base font-medium transition-all duration-300 mt-2 ${
-                  isDark
-                    ? 'bg-white text-black hover:bg-neutral-200'
-                    : 'bg-black text-white hover:bg-neutral-800'
-                }`}
-              >
-                Continue to Dispatch
-              </button>
-            </form>
           </div>
         </div>
       )}
