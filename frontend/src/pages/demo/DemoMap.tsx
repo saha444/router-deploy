@@ -125,6 +125,8 @@ export const DemoMap: React.FC<DemoMapProps> = ({
   // Pan & drag tracking
   const isDraggingRef = useRef(false);
   const dragStartPosRef = useRef({ x: 0, y: 0 });
+  const touchStartDistRef = useRef<number | null>(null);
+  const touchStartZoomRef = useRef<number>(1);
 
   // Zoom helpers
   const handleZoomIn = () => setZoom((z) => Math.min(2.4, +(z + 0.25).toFixed(2)));
@@ -134,7 +136,7 @@ export const DemoMap: React.FC<DemoMapProps> = ({
     setPan({ x: 0, y: 0 });
   };
 
-  // Pan handlers
+  // Mouse pan handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     isDraggingRef.current = false;
     dragStartPosRef.current = { x: e.clientX, y: e.clientY };
@@ -162,6 +164,54 @@ export const DemoMap: React.FC<DemoMapProps> = ({
   };
 
   const handleMouseUp = () => setIsPanning(false);
+
+  // Touch handlers for mobile devices (1-finger pan, 2-finger pinch zoom)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      isDraggingRef.current = false;
+      dragStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+      setIsPanning(true);
+      setStartPan({ x: touch.clientX - pan.x, y: touch.clientY - pan.y });
+    } else if (e.touches.length === 2) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      touchStartDistRef.current = dist;
+      touchStartZoomRef.current = zoom;
+      setIsPanning(false);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 1 && isPanning) {
+      const touch = e.touches[0];
+      if (Math.hypot(touch.clientX - dragStartPosRef.current.x, touch.clientY - dragStartPosRef.current.y) > 6) {
+        isDraggingRef.current = true;
+      }
+      setPan({
+        x: touch.clientX - startPan.x,
+        y: touch.clientY - startPan.y,
+      });
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setMousePos({ x: touch.clientX - rect.left, y: touch.clientY - rect.top });
+      }
+    } else if (e.touches.length === 2 && touchStartDistRef.current) {
+      isDraggingRef.current = true;
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      const ratio = dist / touchStartDistRef.current;
+      const newZoom = Math.min(2.5, Math.max(0.65, +(touchStartZoomRef.current * ratio).toFixed(2)));
+      setZoom(newZoom);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsPanning(false);
+    touchStartDistRef.current = null;
+  };
 
   // Node coordinate lookup map
   const nodeMap = useMemo(() => {
@@ -193,22 +243,24 @@ export const DemoMap: React.FC<DemoMapProps> = ({
     return map;
   }, [stops]);
 
-  // SVG coordinate transformation helper
-  const getSvgCoordinates = useCallback((e: React.MouseEvent): { x: number; y: number } | null => {
+  // SVG coordinate transformation helper (handles mouse and touch)
+  const getSvgCoordinates = useCallback((e: React.MouseEvent | React.TouchEvent): { x: number; y: number } | null => {
     const svg = svgRef.current;
     if (!svg) return null;
     const ctm = svg.getScreenCTM();
+    const clientX = 'clientX' in e ? e.clientX : (e.changedTouches?.[0]?.clientX ?? 0);
+    const clientY = 'clientY' in e ? e.clientY : (e.changedTouches?.[0]?.clientY ?? 0);
     if (ctm) {
       const pt = svg.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
+      pt.x = clientX;
+      pt.y = clientY;
       const transformed = pt.matrixTransform(ctm.inverse());
       return { x: transformed.x, y: transformed.y };
     }
     const rect = svg.getBoundingClientRect();
     return {
-      x: ((e.clientX - rect.left) / (rect.width || 1)) * 1400,
-      y: ((e.clientY - rect.top) / (rect.height || 1)) * 900,
+      x: ((clientX - rect.left) / (rect.width || 1)) * 1400,
+      y: ((clientY - rect.top) / (rect.height || 1)) * 900,
     };
   }, []);
 
@@ -290,7 +342,14 @@ export const DemoMap: React.FC<DemoMapProps> = ({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
-      style={{ cursor: isPanning ? 'grabbing' : interactionMode === 'select-incident-road' ? 'crosshair' : 'default' }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+      style={{
+        cursor: isPanning ? 'grabbing' : interactionMode === 'select-incident-road' ? 'crosshair' : 'default',
+        touchAction: 'none',
+      }}
     >
       {/* ── CSS Keyframe animations for live route dashes and hazard pulse ── */}
       <style>{`
@@ -317,24 +376,24 @@ export const DemoMap: React.FC<DemoMapProps> = ({
       `}</style>
 
       {/* ── Top Status & Mode Banner ── */}
-      <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 pointer-events-none">
+      <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5 pointer-events-none max-w-[calc(100%-140px)] sm:max-w-none">
         <div
-          className={`flex items-center gap-3 px-3.5 py-2 rounded-xl backdrop-blur-md border text-xs font-mono shadow-lg pointer-events-auto ${
+          className={`flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl backdrop-blur-md border text-[11px] sm:text-xs font-mono shadow-lg pointer-events-auto ${
             isDark
               ? 'bg-[#0d0f1a]/85 border-neutral-800/80 text-neutral-200'
               : 'bg-white/90 border-neutral-300/80 text-neutral-800'
           }`}
         >
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-semibold tracking-wide uppercase">Meridian City Dispatch Map</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 truncate">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="font-semibold tracking-wide uppercase truncate">Meridian City</span>
           </div>
-          <span className="opacity-40">|</span>
-          <span className="opacity-70">38 Hubs · 58 Corridors</span>
+          <span className="opacity-40 hidden sm:inline">|</span>
+          <span className="opacity-70 hidden sm:inline">38 Hubs · 58 Corridors</span>
           {routes.length > 0 && (
             <>
               <span className="opacity-40">|</span>
-              <span className="text-indigo-400 font-semibold">{routes.length} Active Routes</span>
+              <span className="text-indigo-400 font-semibold">{routes.length} Active</span>
             </>
           )}
         </div>
@@ -549,6 +608,7 @@ export const DemoMap: React.FC<DemoMapProps> = ({
           transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
           transformOrigin: 'center center',
           transition: isPanning ? 'none' : 'transform 0.12s ease-out',
+          touchAction: 'none',
           cursor:
             interactionMode === 'place-stop' || interactionMode === 'place-depot'
               ? 'crosshair'
@@ -1371,38 +1431,51 @@ export const DemoMap: React.FC<DemoMapProps> = ({
       {/* ── Bottom-Left Legend Panel ── */}
       {showLegend && (
         <div
-          className={`absolute bottom-4 left-4 z-20 p-3.5 rounded-2xl backdrop-blur-md border text-xs shadow-xl flex flex-col gap-2 ${
+          className={`absolute bottom-3 left-3 z-20 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl backdrop-blur-md border text-[10px] sm:text-xs shadow-xl flex flex-col gap-1.5 sm:gap-2 max-w-[200px] sm:max-w-none ${
             isDark ? 'bg-[#0d0f1a]/90 border-neutral-800/90 text-neutral-300' : 'bg-white/95 border-neutral-300/90 text-neutral-700'
           }`}
         >
-          <div className="font-semibold uppercase tracking-wider text-[10px] opacity-60">Map Legend</div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-amber-500/30" />
-              <span>Central Depot</span>
+          <div className="flex items-center justify-between">
+            <span className="font-semibold uppercase tracking-wider text-[9px] sm:text-[10px] opacity-60">Map Legend</span>
+            <button
+              type="button"
+              onClick={() => setShowLegend(false)}
+              className="text-[10px] opacity-60 hover:opacity-100 px-1 ml-2"
+              title="Close Legend"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[10px] sm:text-[11px]">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-amber-500/30 shrink-0" />
+              <span>Depot</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0" />
               <span>Delivery Stop</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-[4px] rounded bg-slate-500" />
-              <span>Highway (Bypass)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-[2.5px] rounded bg-slate-400" />
-              <span>Arterial Road</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-[3px] rounded bg-emerald-500" />
+            <div className="flex items-center gap-1.5">
+              <span className="w-4 h-[3px] rounded bg-emerald-500 shrink-0" />
               <span>Dynamic Detour</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-[3px] rounded bg-red-500" />
-              <span>Blocked Incident</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-4 h-[3px] rounded bg-red-500 shrink-0" />
+              <span>Blocked Road</span>
             </div>
           </div>
         </div>
+      )}
+      {!showLegend && (
+        <button
+          type="button"
+          onClick={() => setShowLegend(true)}
+          className={`absolute bottom-3 left-3 z-20 px-2.5 py-1 rounded-lg backdrop-blur-md border text-[10px] shadow-md font-mono transition-all ${
+            isDark ? 'bg-[#0d0f1a]/85 border-neutral-800 text-neutral-400 hover:text-white' : 'bg-white/90 border-neutral-300 text-neutral-600 hover:text-black'
+          }`}
+        >
+          Legend
+        </button>
       )}
     </div>
   );

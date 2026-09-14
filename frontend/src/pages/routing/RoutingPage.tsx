@@ -119,6 +119,8 @@ const RoutingPage: React.FC = () => {
     if (success) setCurrentStep('plan');
   };
 
+  const [mobileView, setMobileView] = useState<'panel' | 'map'>('panel');
+
   const ic = (extra = '') => `w-full px-4 py-2.5 rounded-xl border text-base outline-none transition-colors ${isDark ? 'bg-neutral-900 border-neutral-700 text-white focus:border-white' : 'bg-neutral-50 border-neutral-300 text-black focus:border-black'} ${extra}`;
   const borderCls = isDark ? 'border-[#222222]' : 'border-[#e5e5e5]';
   const bgCls = isDark ? 'bg-[#070707]' : 'bg-white';
@@ -133,19 +135,25 @@ const RoutingPage: React.FC = () => {
         <div className="flex items-center gap-2 sm:gap-4 text-base overflow-x-auto py-1">
           {[
             { key: 'fleet', label: 'Fleet Setup', enabled: true },
-            { key: 'depot', label: 'Depot Location', enabled: fleet.length > 0 },
-            { key: 'stops', label: 'Stops per Vehicle', enabled: !!depot },
-            { key: 'focus', label: 'Operational Focus', enabled: stops.length > 0 },
+            { key: 'depot', label: 'Depot Location', enabled: isFleetConfirmed },
+            { key: 'stops', label: 'Stops & Weights', enabled: !!depot },
+            { key: 'focus', label: 'Objective Focus', enabled: stops.length > 0 },
+            { key: 'plan', label: 'Route Plan', enabled: routes.length > 0 },
           ].map((step, i) => (
             <React.Fragment key={step.key}>
-              {i > 0 && <span className="opacity-30">→</span>}
+              {i > 0 && <span className="opacity-30">/</span>}
               <button
-                onClick={() => { if (step.enabled) setCurrentStep(step.key as WizardStep); }}
                 disabled={!step.enabled}
-                className={`flex items-center gap-2 transition-opacity ${currentStep === step.key || (step.key === 'focus' && currentStep === 'plan') ? isDark ? 'text-white font-semibold underline underline-offset-4' : 'text-black font-semibold underline underline-offset-4' : step.enabled ? 'opacity-50 hover:opacity-100' : 'opacity-25 cursor-not-allowed'}`}
+                onClick={() => setCurrentStep(step.key as WizardStep)}
+                className={`transition-all ${
+                  currentStep === step.key
+                    ? isDark ? 'text-white font-semibold' : 'text-black font-semibold'
+                    : step.enabled
+                    ? 'opacity-60 hover:opacity-100'
+                    : 'opacity-25 cursor-not-allowed'
+                }`}
               >
-                <span className="w-5 h-5 rounded-full border text-xs flex items-center justify-center">{i + 1}</span>
-                <span>{step.label}</span>
+                {step.label}
               </button>
             </React.Fragment>
           ))}
@@ -161,6 +169,41 @@ const RoutingPage: React.FC = () => {
       </div>
 
       <div className="flex-1 w-full flex flex-col min-h-0 overflow-hidden">
+
+        {/* Mobile Sub-Header: Segmented Switcher for Panel vs. Map */}
+        {['depot', 'stops', 'plan'].includes(currentStep) && (
+          <div
+            className={`lg:hidden flex items-center justify-center px-4 py-2 border-b shrink-0 z-30 transition-colors backdrop-blur-md ${borderCls} ${
+              isDark ? 'bg-neutral-950/95' : 'bg-white/95'
+            }`}
+          >
+            <div className={`flex p-1 rounded-full border text-xs w-full max-w-xs mx-auto justify-center ${isDark ? 'border-neutral-800 bg-neutral-900/70' : 'border-neutral-200 bg-neutral-100/90'}`}>
+              <button
+                type="button"
+                onClick={() => setMobileView('panel')}
+                className={`flex-1 py-1.5 px-3 rounded-full font-medium transition-all text-center ${
+                  mobileView === 'panel'
+                    ? (isDark ? 'bg-white text-black font-semibold shadow' : 'bg-black text-white font-semibold shadow')
+                    : (isDark ? 'text-neutral-400 hover:text-white' : 'text-neutral-600 hover:text-black')
+                }`}
+              >
+                📋 Controls & Setup
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileView('map')}
+                className={`flex-1 py-1.5 px-3 rounded-full font-medium transition-all text-center flex items-center justify-center gap-1.5 ${
+                  mobileView === 'map'
+                    ? (isDark ? 'bg-white text-black font-semibold shadow' : 'bg-black text-white font-semibold shadow')
+                    : (isDark ? 'text-neutral-400 hover:text-white' : 'text-neutral-600 hover:text-black')
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                🗺️ Interactive Map
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* STEP 1: FLEET */}
         {currentStep === 'fleet' && (
@@ -271,7 +314,7 @@ const RoutingPage: React.FC = () => {
         {/* STEP 2: DEPOT */}
         {currentStep === 'depot' && (
           <div className="flex-1 w-full flex flex-col lg:flex-row h-full min-h-0 overflow-hidden">
-            <div className={`w-full lg:w-[440px] h-full p-6 sm:p-8 flex flex-col justify-between border-r text-left overflow-y-auto sleek-scrollbar shrink-0 ${borderCls} ${bgCls}`}>
+            <div className={`${mobileView === 'panel' ? 'flex' : 'hidden'} lg:flex w-full lg:w-[440px] h-full p-6 sm:p-8 flex-col justify-between border-r text-left overflow-y-auto sleek-scrollbar shrink-0 ${borderCls} ${bgCls}`}>
               <div className="space-y-6">
                 <div>
                   <h2 className="text-3xl font-semibold">Depot Location</h2>
@@ -294,14 +337,30 @@ const RoutingPage: React.FC = () => {
                     </div>
                   ) : <p className="text-xs">Click directly on any road line on the map to drop the depot terminal pin.</p>}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileView('map')}
+                  className="lg:hidden w-full py-2.5 px-4 rounded-xl border border-dashed text-xs text-center flex items-center justify-center gap-2 text-indigo-400 border-indigo-500/40 hover:bg-indigo-500/10 transition-colors font-medium"
+                >
+                  <span>🗺️</span>
+                  <span>Open Map to Drop Depot Pin [D]</span>
+                </button>
               </div>
               <div className="pt-6 border-t border-neutral-800/40 flex items-center justify-between gap-4 mt-6">
                 <button onClick={() => setCurrentStep('fleet')} className={`px-4 py-2.5 rounded-full border text-sm transition-colors ${isDark ? 'border-neutral-700 hover:border-white' : 'border-neutral-300 hover:border-black'}`}>← Back to Fleet</button>
                 <button disabled={!depot} onClick={() => setCurrentStep('stops')} className={`px-6 py-2.5 rounded-full text-base font-medium transition-all ${!depot ? 'opacity-40 cursor-not-allowed border border-neutral-700' : isDark ? 'bg-white text-black hover:bg-neutral-200 shadow-xl' : 'bg-black text-white hover:bg-neutral-800 shadow-xl'}`}>Confirm Depot & Add Stops →</button>
               </div>
             </div>
-            <div className="flex-1 h-full min-h-0 overflow-hidden relative">
+            <div className={`${mobileView === 'map' ? 'flex' : 'hidden'} lg:flex flex-1 h-full min-h-0 overflow-hidden relative`}>
               <MapView geojson={geojson} center={depot ? [depot.lat, depot.lon] : [22.5937, 78.9629]} zoom={depot ? 13 : 5} depot={depot} stops={stops} mapClickMode={mapClickMode} onMapClick={handleMapClick} />
+              <button
+                type="button"
+                onClick={() => setMobileView('panel')}
+                className="lg:hidden absolute bottom-3 right-3 z-[1000] px-3.5 py-2 rounded-full backdrop-blur-md border text-xs font-semibold shadow-xl flex items-center gap-1.5 bg-white text-black border-neutral-300 hover:bg-neutral-100 active:scale-95 transition-all"
+              >
+                <span>📋</span>
+                <span>Back to Setup</span>
+              </button>
             </div>
           </div>
         )}
@@ -309,7 +368,7 @@ const RoutingPage: React.FC = () => {
         {/* STEP 3: STOPS PER VEHICLE */}
         {currentStep === 'stops' && (
           <div className="flex-1 w-full flex flex-col lg:flex-row h-full min-h-0 overflow-hidden">
-            <div className={`w-full lg:w-[460px] h-full p-6 sm:p-8 flex flex-col justify-between border-r text-left overflow-y-auto sleek-scrollbar shrink-0 ${borderCls} ${bgCls}`}>
+            <div className={`${mobileView === 'panel' ? 'flex' : 'hidden'} lg:flex w-full lg:w-[460px] h-full p-6 sm:p-8 flex-col justify-between border-r text-left overflow-y-auto sleek-scrollbar shrink-0 ${borderCls} ${bgCls}`}>
               <div className="space-y-5">
                 <div>
                   <h2 className="text-3xl font-semibold">Stops per Vehicle</h2>
@@ -396,13 +455,28 @@ const RoutingPage: React.FC = () => {
                   <p className="text-xs opacity-50">Or click on the map to drop a stop for the selected vehicle.</p>
                 </div>
 
+                <button
+                  type="button"
+                  onClick={() => setMobileView('map')}
+                  className="lg:hidden w-full py-2.5 px-4 rounded-xl border border-dashed text-xs text-center flex items-center justify-center gap-2 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/10 transition-colors font-medium"
+                >
+                  <span>🗺️</span>
+                  <span>Tap to Place Stops on Map</span>
+                </button>
+
                 {/* Stops list for active vehicle */}
                 {(() => {
                   const summary = getVehicleWeightSummary(activeStopVehicleIdx);
                   if (summary.stopsForVehicle.length === 0) return <div className={`p-4 rounded-xl border text-center opacity-60 text-xs ${isDark ? 'border-neutral-800' : 'border-neutral-200'}`}>No stops added for this vehicle yet.</div>;
                   return (
                     <div className="space-y-2">
-                      <div className="text-xs uppercase tracking-wider opacity-60">{fleet[activeStopVehicleIdx]?.name} — {summary.stopsForVehicle.length} stops:</div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs uppercase tracking-wider opacity-60">{fleet[activeStopVehicleIdx]?.name} — {summary.stopsForVehicle.length} stops:</div>
+                        <button onClick={() => {
+                          const toRemove = stops.map((s, idx) => ({ s, idx })).filter(item => item.s.vehicleIdx === activeStopVehicleIdx);
+                          toRemove.reverse().forEach(item => removeStop(item.idx));
+                        }} className="text-[11px] text-red-400 hover:text-red-300 transition-colors">Clear all</button>
+                      </div>
                       <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1 sleek-scrollbar">
                         {summary.stopsForVehicle.map((stop, i) => {
                           const globalIdx = stops.indexOf(stop);
@@ -425,8 +499,16 @@ const RoutingPage: React.FC = () => {
                 <button disabled={stops.length === 0} onClick={() => setCurrentStep('focus')} className={`px-6 py-2.5 rounded-full text-base font-medium transition-all ${stops.length === 0 ? 'opacity-40 cursor-not-allowed border border-neutral-700' : isDark ? 'bg-white text-black hover:bg-neutral-200 shadow-xl' : 'bg-black text-white hover:bg-neutral-800 shadow-xl'}`}>Confirm Stops & Set Focus →</button>
               </div>
             </div>
-            <div className="flex-1 h-full min-h-0 overflow-hidden relative">
+            <div className={`${mobileView === 'map' ? 'flex' : 'hidden'} lg:flex flex-1 h-full min-h-0 overflow-hidden relative`}>
               <MapView geojson={geojson} center={depot ? [depot.lat, depot.lon] : [22.5937, 78.9629]} zoom={depot ? 13 : 5} depot={depot} stops={stops} mapClickMode={mapClickMode} onMapClick={handleMapClick} />
+              <button
+                type="button"
+                onClick={() => setMobileView('panel')}
+                className="lg:hidden absolute bottom-3 right-3 z-[1000] px-3.5 py-2 rounded-full backdrop-blur-md border text-xs font-semibold shadow-xl flex items-center gap-1.5 bg-white text-black border-neutral-300 hover:bg-neutral-100 active:scale-95 transition-all"
+              >
+                <span>📋</span>
+                <span>Back to Stops List</span>
+              </button>
             </div>
           </div>
         )}
@@ -474,12 +556,21 @@ const RoutingPage: React.FC = () => {
         {/* STEP 5: DISPATCH PLAN */}
         {currentStep === 'plan' && (
           <div className="flex-1 w-full flex flex-col lg:flex-row h-full min-h-0 overflow-hidden">
-            <div className={`w-full lg:w-[460px] h-full p-6 sm:p-8 flex flex-col justify-between border-r text-left overflow-y-auto sleek-scrollbar shrink-0 ${borderCls} ${bgCls}`}>
+            <div className={`${mobileView === 'panel' ? 'flex' : 'hidden'} lg:flex w-full lg:w-[460px] h-full p-6 sm:p-8 flex-col justify-between border-r text-left overflow-y-auto sleek-scrollbar shrink-0 ${borderCls} ${bgCls}`}>
               <div className="space-y-6">
                 <div>
                   <h2 className="text-3xl font-semibold">Dispatch Plan</h2>
                   <p className="text-sm opacity-70">Optimized route solution</p>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileView('map')}
+                  className="lg:hidden w-full py-2.5 px-4 rounded-xl border border-dashed text-xs text-center flex items-center justify-center gap-2 text-indigo-400 border-indigo-500/40 hover:bg-indigo-500/10 transition-colors font-medium"
+                >
+                  <span>🗺️</span>
+                  <span>View Route Layout on Map</span>
+                </button>
                 <div className="flex flex-wrap items-center gap-2 pb-1 text-xs">
                   {PREFERENCE_CARDS.map((p) => (
                     <button key={p.id} onClick={() => applyPreference(p.id)} className={`px-3 py-1.5 rounded-full border transition-all ${selectedPreference === p.id ? isDark ? 'bg-white text-black border-white font-semibold' : 'bg-black text-white border-black font-semibold' : isDark ? 'border-neutral-800 text-neutral-400 hover:text-white' : 'border-neutral-300 text-neutral-600 hover:text-black'}`}>{p.title}</button>
@@ -543,8 +634,16 @@ const RoutingPage: React.FC = () => {
                 <button onClick={() => window.print()} className={`px-4 py-2 rounded-full border text-xs transition-colors ${isDark ? 'border-neutral-700 hover:border-white' : 'border-neutral-300 hover:border-black'}`}>Print Route Plan</button>
               </div>
             </div>
-            <div className="flex-1 h-full min-h-0 overflow-hidden relative">
+            <div className={`${mobileView === 'map' ? 'flex' : 'hidden'} lg:flex flex-1 h-full min-h-0 overflow-hidden relative`}>
               <MapView geojson={geojson} center={depot ? [depot.lat, depot.lon] : [22.5937, 78.9629]} zoom={depot ? 12 : 5} depot={depot} stops={stops} routes={routes} activeVehicleId={activeVehicleId} activeEvents={activeEvents} />
+              <button
+                type="button"
+                onClick={() => setMobileView('panel')}
+                className="lg:hidden absolute bottom-3 right-3 z-[1000] px-3.5 py-2 rounded-full backdrop-blur-md border text-xs font-semibold shadow-xl flex items-center gap-1.5 bg-white text-black border-neutral-300 hover:bg-neutral-100 active:scale-95 transition-all"
+              >
+                <span>📋</span>
+                <span>Back to Route Plan</span>
+              </button>
             </div>
           </div>
         )}

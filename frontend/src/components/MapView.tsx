@@ -60,13 +60,29 @@ function InvalidateMapSize() {
   useEffect(() => {
     map.invalidateSize();
     const t1 = setTimeout(() => map.invalidateSize(), 150);
-    const t2 = setTimeout(() => map.invalidateSize(), 600);
+    const t2 = setTimeout(() => map.invalidateSize(), 500);
+    const t3 = setTimeout(() => map.invalidateSize(), 1000);
+
     const handleResize = () => map.invalidateSize();
     window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
+    const container = map.getContainer();
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && container) {
+      ro = new ResizeObserver(() => {
+        map.invalidateSize();
+      });
+      ro.observe(container);
+    }
+
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
+      clearTimeout(t3);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+      if (ro) ro.disconnect();
     };
   }, [map]);
   return null;
@@ -376,14 +392,14 @@ const MapView: React.FC<MapViewProps> = ({
       {/* Click Mode Banner Overlay - Clean text with NO emojis */}
       {mapClickMode !== 'none' && (
         <div
-          className={`absolute top-4 left-1/2 -translate-x-1/2 z-[1000] px-5 py-2 backdrop-blur-md text-sm rounded-full shadow-2xl flex items-center gap-2.5 border transition-all ${
+          className={`absolute top-14 sm:top-4 left-1/2 -translate-x-1/2 z-[1000] px-3.5 sm:px-5 py-1.5 sm:py-2 backdrop-blur-md text-xs sm:text-sm rounded-full shadow-2xl flex items-center gap-2 border transition-all whitespace-nowrap max-w-[90vw] truncate ${
             isDark
               ? 'bg-white text-black border-neutral-300'
               : 'bg-black text-white border-neutral-700'
           }`}
         >
-          <span className={`w-2 h-2 rounded-full animate-ping ${isDark ? 'bg-black' : 'bg-white'}`} />
-          <span>
+          <span className={`w-2 h-2 rounded-full animate-ping shrink-0 ${isDark ? 'bg-black' : 'bg-white'}`} />
+          <span className="truncate">
             {mapClickMode === 'place_depot' && 'Click road on map to place Depot terminal [D]'}
             {mapClickMode === 'place_stop' && 'Click road on map to add delivery destination'}
             {mapClickMode === 'select_road' && 'Click road on map to simulate traffic event'}
@@ -392,14 +408,14 @@ const MapView: React.FC<MapViewProps> = ({
       )}
 
       {/* Map Search & Recenter Bar */}
-      <div className="absolute top-4 right-4 z-[999] flex items-center gap-2 pointer-events-auto">
+      <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-[999] flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
         <form onSubmit={handleLocationSearch} className="flex items-center">
           <input
             type="text"
-            placeholder="Search city / location..."
+            placeholder="Search city..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className={`px-3 py-1.5 text-xs rounded-l-lg border outline-none backdrop-blur-md w-44 md:w-56 font-sans transition-all ${
+            className={`px-2.5 sm:px-3 py-1.5 text-xs rounded-l-lg border outline-none backdrop-blur-md w-28 sm:w-44 md:w-56 font-sans transition-all ${
               isDark
                 ? 'bg-black/75 border-neutral-700 text-white placeholder-neutral-500 focus:border-white'
                 : 'bg-white/85 border-neutral-300 text-black placeholder-neutral-400 focus:border-black'
@@ -408,7 +424,7 @@ const MapView: React.FC<MapViewProps> = ({
           <button
             type="submit"
             disabled={isSearching}
-            className={`px-3 py-1.5 text-xs rounded-r-lg border-y border-r font-medium transition-all ${
+            className={`px-2.5 sm:px-3 py-1.5 text-xs rounded-r-lg border-y border-r font-medium transition-all ${
               isDark
                 ? 'bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700'
                 : 'bg-neutral-200 border-neutral-300 text-black hover:bg-neutral-300'
@@ -421,7 +437,7 @@ const MapView: React.FC<MapViewProps> = ({
         <button
           onClick={handleRecenter}
           title="Recenter Map on Fleet/Depot"
-          className={`px-3 py-1.5 text-xs rounded-lg border backdrop-blur-md font-sans font-medium transition-all ${
+          className={`px-2.5 sm:px-3 py-1.5 text-xs rounded-lg border backdrop-blur-md font-sans font-medium transition-all shrink-0 ${
             isDark
               ? 'bg-black/75 border-neutral-700 text-white hover:border-white hover:bg-neutral-900'
               : 'bg-white/85 border-neutral-300 text-black hover:border-black hover:bg-white'
