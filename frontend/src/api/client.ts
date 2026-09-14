@@ -4,7 +4,7 @@ import type {
   TrafficEventOut, ImpactAnalysisOut, Route, BenchmarkResultOut,
 } from '../types';
 
-const BASE = 'http://localhost:8000';
+const BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '');
 
 const api = axios.create({ baseURL: BASE, timeout: 300_000 });
 
