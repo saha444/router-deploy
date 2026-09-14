@@ -112,7 +112,7 @@ const DemoPage: React.FC = () => {
     showRerouteDialog, alternativeRoutePreview,
     activeStopVehicleIdx,
     setMapClickMode, addVehicle, removeVehicle, updateVehicle,
-    setDepotCoords,
+    setDepotCoords, addStopCoords,
     setActiveVehicleId, saveAndOptimize, applyPreference,
     confirmReroute, dismissReroute, ensureNetwork,
     setActiveStopVehicleIdx, mapStopPickupWeight, setMapStopPickupWeight, mapStopDropoffWeight, setMapStopDropoffWeight,
@@ -195,7 +195,8 @@ const DemoPage: React.FC = () => {
       if (typeof depot.node_id === 'number' && depot.node_id >= 1 && depot.node_id <= DEMO_NODES.length) {
         return depot.node_id;
       }
-      const hash = Math.abs((depot.name || `${depot.lat},${depot.lon}`).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0));
+      const depotName = (depot as { name?: string; lat: number; lon: number }).name;
+      const hash = Math.abs((depotName || `${depot.lat},${depot.lon}`).split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), 0));
       return DEMO_NODES[hash % DEMO_NODES.length].id;
     }
     if (fleet.length > 0 || stops.length > 0) {

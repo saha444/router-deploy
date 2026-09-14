@@ -36,11 +36,11 @@ const Dashboard: React.FC = () => {
           { id: 4, name: 'Meridian Heavy Delta', capacity: 800 },
         ],
         customers: [
-          { id: 1, name: 'Central Hospital', node_id: 4, demand: 40, lat: 51.758, lon: -1.252, status: 'pending' },
-          { id: 2, name: 'Port Logistics', node_id: 12, demand: 65, lat: 51.745, lon: -1.261, status: 'pending' },
-          { id: 3, name: 'Tech Park Bay', node_id: 8, demand: 30, lat: 51.762, lon: -1.240, status: 'pending' },
-          { id: 4, name: 'North Mall Hub', node_id: 18, demand: 55, lat: 51.739, lon: -1.250, status: 'pending' },
-          { id: 5, name: 'Harbour Quay', node_id: 23, demand: 45, lat: 51.750, lon: -1.270, status: 'pending' },
+          { id: 1, name: 'Central Hospital', node_id: 4, pickup_weight: 0, dropoff_weight: 40, demand: 40, lat: 51.758, lon: -1.252, status: 'pending' },
+          { id: 2, name: 'Port Logistics', node_id: 12, pickup_weight: 0, dropoff_weight: 65, demand: 65, lat: 51.745, lon: -1.261, status: 'pending' },
+          { id: 3, name: 'Tech Park Bay', node_id: 8, pickup_weight: 0, dropoff_weight: 30, demand: 30, lat: 51.762, lon: -1.240, status: 'pending' },
+          { id: 4, name: 'North Mall Hub', node_id: 18, pickup_weight: 0, dropoff_weight: 55, demand: 55, lat: 51.739, lon: -1.250, status: 'pending' },
+          { id: 5, name: 'Harbour Quay', node_id: 23, pickup_weight: 0, dropoff_weight: 45, demand: 45, lat: 51.750, lon: -1.270, status: 'pending' },
         ],
       });
       return;
@@ -89,7 +89,7 @@ const Dashboard: React.FC = () => {
       ? [scenario.depot_lat, scenario.depot_lon]
       : undefined;
 
-  const totalDemand = scenario?.customers.reduce((s, c) => s + c.demand, 0) ?? 0;
+  const totalDemand = scenario?.customers.reduce((s, c) => s + (c.demand ?? c.dropoff_weight ?? c.pickup_weight ?? 0), 0) ?? 0;
   const activeVehicleCount = routes.length > 0 ? routes.length : scenario?.vehicles.length ?? 4;
 
   return (

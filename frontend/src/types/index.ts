@@ -27,8 +27,9 @@ export interface ScenarioCustomer {
   node_id: number;
   lat: number;
   lon: number;
-  pickup_weight: number;
-  dropoff_weight: number;
+  pickup_weight?: number;
+  dropoff_weight?: number;
+  demand?: number;
   status: string;
 }
 
@@ -53,8 +54,9 @@ export interface VehicleCreate {
 export interface CustomerCreate {
   name?: string;
   node_id: number;
-  pickup_weight: number;
-  dropoff_weight: number;
+  pickup_weight?: number;
+  dropoff_weight?: number;
+  demand?: number;
   lat: number;
   lon: number;
   vehicleIdx?: number;

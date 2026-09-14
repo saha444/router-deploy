@@ -47,7 +47,7 @@ const RoutingPage: React.FC = () => {
 
   const runningFleet = fleet.filter((v) => (v.status ?? 'running') === 'running');
   const totalRunningMaxCapacity = runningFleet.reduce((sum, v) => sum + (v.capacity || 0), 0);
-  const totalStopsDemand = stops.reduce((sum, s) => sum + (s.demand || 0), 0);
+  const totalStopsDemand = stops.reduce((sum, s) => sum + (s.demand || s.dropoff_weight || s.pickup_weight || 0), 0);
   const runningVehicleCount = runningFleet.length;
   const dormantVehicleCount = fleet.length - runningVehicleCount;
 

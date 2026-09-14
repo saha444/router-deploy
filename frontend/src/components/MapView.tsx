@@ -141,7 +141,7 @@ const MapView: React.FC<MapViewProps> = ({
         node_id: c.node_id,
         lat: typeof c.lat === 'number' && c.lat !== 0 ? c.lat : (stops[i]?.lat ?? 0),
         lon: typeof c.lon === 'number' && c.lon !== 0 ? c.lon : (stops[i]?.lon ?? 0),
-        demand: c.demand,
+        demand: c.demand ?? c.dropoff_weight ?? c.pickup_weight ?? 0,
         vehicleIdx: stops[i]?.vehicleIdx,
       }));
     }
@@ -151,7 +151,7 @@ const MapView: React.FC<MapViewProps> = ({
       node_id: s.node_id,
       lat: s.lat,
       lon: s.lon,
-      demand: s.demand,
+      demand: s.demand ?? s.dropoff_weight ?? s.pickup_weight ?? 0,
       vehicleIdx: s.vehicleIdx,
     }));
   }, [stops, scenario]);
@@ -200,7 +200,7 @@ const MapView: React.FC<MapViewProps> = ({
         // Fallback to scenario customer matching
         if (!found && scenario?.customers) {
           const sc = scenario.customers.find((c) => c.id === cid);
-          if (sc) found = { id: sc.id, name: sc.name || '', node_id: sc.node_id, lat: sc.lat, lon: sc.lon, demand: sc.demand, vehicleIdx: routeIdx };
+          if (sc) found = { id: sc.id, name: sc.name || '', node_id: sc.node_id, lat: sc.lat, lon: sc.lon, demand: sc.demand ?? sc.dropoff_weight ?? sc.pickup_weight ?? 0, vehicleIdx: routeIdx };
         }
         // Fallback by index
         if (!found && cid >= 0 && cid < displayStops.length) {

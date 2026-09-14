@@ -36,7 +36,15 @@ export const createCustomScenario = (params: {
   depot_lat?: number;
   depot_lon?: number;
   vehicles: Array<{ name: string; capacity: number }>;
-  customers: Array<{ name?: string; node_id: number; demand: number; lat: number; lon: number }>;
+  customers: Array<{
+    name?: string;
+    node_id: number;
+    pickup_weight?: number;
+    dropoff_weight?: number;
+    demand?: number;
+    lat: number;
+    lon: number;
+  }>;
 }) => api.post<ScenarioOut>('/api/network/scenario', params);
 
 export const getNearestNode = (networkId: number, lat: number, lon: number) =>
