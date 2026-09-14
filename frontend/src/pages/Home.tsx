@@ -52,26 +52,14 @@ const Home: React.FC = () => {
             Quantum-inspired many-objective path generation across travel time, road distance, congestion exposure, and route disruption.
           </p>
 
-          {/* Action Buttons: "Start Routing" and "Demo a Route" */}
+          {/* Action Button: "Demo a Route" */}
           <div className="flex flex-wrap items-center gap-4 pt-4">
             <Link
-              to="/routing"
+              to="/demo"
               className={`px-8 py-3 rounded-full text-xl font-medium tracking-wide transition-all duration-300 ${
                 isDark
                   ? 'bg-white text-black hover:bg-neutral-200 shadow-lg shadow-white/5 hover:scale-105 active:scale-95'
                   : 'bg-black text-white hover:bg-neutral-800 shadow-lg shadow-black/10 hover:scale-105 active:scale-95'
-              }`}
-              style={{ fontFamily: '"EB Garamond", serif' }}
-            >
-              Start Routing
-            </Link>
-
-            <Link
-              to="/demo"
-              className={`px-8 py-3 rounded-full text-xl font-medium tracking-wide border transition-all duration-300 ${
-                isDark
-                  ? 'border-neutral-700 text-white hover:border-white hover:bg-neutral-900 hover:scale-105 active:scale-95'
-                  : 'border-neutral-300 text-black hover:border-black hover:bg-neutral-100 hover:scale-105 active:scale-95'
               }`}
               style={{ fontFamily: '"EB Garamond", serif' }}
             >
